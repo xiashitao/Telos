@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ResumePreview } from "@/components/resume-preview";
@@ -35,6 +35,15 @@ const tabMeta: { key: SectionKey; label: string }[] = [
 type TabKey = SectionKey | "basics" | "order";
 
 export default function EditorPage() {
+  // useSearchParams 需在 Suspense 边界内，否则生产构建预渲染 /editor 会报错
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-bg" />}>
+      <EditorPageInner />
+    </Suspense>
+  );
+}
+
+function EditorPageInner() {
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<TabKey>("basics");
   const [exporting, setExporting] = useState(false);

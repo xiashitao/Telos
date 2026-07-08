@@ -52,7 +52,8 @@ export function RichTextEditor({
   // 外部 value 变化时同步(如 AI 润色采用、重置)
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || "", false);
+      // Tiptap v3：emitUpdate 从布尔位参数改为 options 对象，避免同步时回触 onChange
+      editor.commands.setContent(value || "", { emitUpdate: false });
     }
   }, [value, editor]);
 
