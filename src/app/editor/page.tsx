@@ -12,6 +12,7 @@ import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { SmartOnePagePanel } from "@/components/smart-one-page-panel";
 import { ImportPanel } from "@/components/import-panel";
 import { ExportMenu } from "@/components/export-menu";
+import { JdTailorBar } from "@/components/jd-tailor-bar";
 import { EnhanceButton } from "@/components/enhance-button";
 import { SortableList, SortableItem } from "@/components/sortable";
 import { ToolbarDropdown, DropdownItem } from "@/components/toolbar-dropdown";
@@ -143,6 +144,8 @@ function EditorPageInner() {
 
       {/* main */}
       <div className="mx-auto max-w-[1440px] px-5 py-6 md:px-10">
+        {/* 上下文式 AI：粘贴 JD 就地优化，不占独立 tab */}
+        <JdTailorBar />
         <div className="grid gap-8 lg:grid-cols-[2fr_3fr]">
           {/* form */}
           <div className="rounded-card border border-line bg-white p-5 shadow-card md:p-7">
