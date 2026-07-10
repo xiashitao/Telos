@@ -74,3 +74,25 @@ export function parseSpec(raw: unknown): TemplateSpec | null {
   const res = templateSpecSchema.safeParse(raw);
   return res.success ? res.data : null;
 }
+
+type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
+
+/**
+ * 把 AI 流式产出的 partial spec 安全地补全成完整 TemplateSpec：
+ * 以默认 spec 为底、逐字段浅覆盖，最后整体过 schema 校验(非法字段回落默认)。
+ * vibe coding 的流式预览走这里，保证任一时刻都是合法 spec。
+ */
+export function mergeSpecPartial(partial: DeepPartial<TemplateSpec> | undefined): TemplateSpec {
+  const d = createDefaultSpec();
+  if (!partial) return d;
+  const merged = {
+    specVersion: 1 as const,
+    skeleton: partial.skeleton ?? d.skeleton,
+    sidebarRatio: partial.sidebarRatio ?? d.sidebarRatio,
+    header: { ...d.header, ...partial.header },
+    section: { ...d.section, ...partial.section },
+    typography: { ...d.typography, ...partial.typography },
+    colors: { ...d.colors, ...partial.colors },
+  };
+  return parseSpec(merged) ?? d;
+}

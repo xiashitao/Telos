@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { useResumeStore, themePresets } from "@/lib/store";
 import { useCustomTemplates } from "@/lib/custom-templates-store";
-import { CUSTOM_PREFIX } from "@/lib/template-spec";
+import { CUSTOM_PREFIX, templateSpecSchema, mergeSpecPartial } from "@/lib/template-spec";
 import type { TemplateSpec } from "@/lib/template-spec";
 
 /**
@@ -54,6 +56,17 @@ export function CustomTemplatePanel({ onClose }: { onClose: () => void }) {
           + 新建模板
         </button>
       </div>
+
+      {/* vibe coding：截图 → AI 生成模板参数 */}
+      <VibeSection
+        onStart={() => {
+          if (active) return active.id;
+          const id = add("截图模板");
+          setTheme({ template: `${CUSTOM_PREFIX}${id}` });
+          return id;
+        }}
+        applySpec={(id, spec) => updateSpec(id, spec)}
+      />
 
       {!active ? (
         <p className="text-xs text-muted">选择或新建一个自定义模板开始调整。</p>
@@ -180,6 +193,101 @@ export function CustomTemplatePanel({ onClose }: { onClose: () => void }) {
             </Field>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 截图生成模板(vibe coding)：上传简历截图 → AI 流式还原成 TemplateSpec，
+ * 每个 partial 都经 mergeSpecPartial 补全校验后实时写入当前模板(预览同步长出来)。
+ */
+function VibeSection({
+  onStart,
+  applySpec,
+}: {
+  /** 确保有一个自定义模板可写入，返回其 id（无则创建） */
+  onStart: () => string;
+  applySpec: (id: string, spec: TemplateSpec) => void;
+}) {
+  const [image, setImage] = useState<string | null>(null);
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const { object, submit, isLoading, error, stop } = useObject({
+    api: "/api/vibe-template",
+    schema: templateSpecSchema,
+  });
+
+  // 流式：partial → 补全成合法 spec → 实时写入目标模板
+  useEffect(() => {
+    if (object && targetId) applySpec(targetId, mergeSpecPartial(object));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [object, targetId]);
+
+  function pickFile(file: File | undefined | null) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => setImage(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function generate() {
+    if (!image || isLoading) return;
+    const id = onStart();
+    setTargetId(id);
+    submit({ image });
+  }
+
+  return (
+    <div className="mb-3 rounded-lg border border-dashed border-line p-3">
+      <div className="flex items-center gap-2.5">
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = ""; }}
+        />
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={image} alt="截图" className="h-12 w-9 cursor-pointer rounded border border-line object-cover" onClick={() => fileInput.current?.click()} />
+        ) : (
+          <button
+            onClick={() => fileInput.current?.click()}
+            className="grid h-12 w-9 place-items-center rounded border border-dashed border-line text-lg text-muted hover:border-brand-line hover:text-brand"
+          >
+            +
+          </button>
+        )}
+        <div className="flex-1">
+          <p className="text-xs font-medium">截图生成模板</p>
+          <p className="text-[0.66rem] leading-snug text-muted">
+            上传一张简历截图，AI 还原它的版式（神似而非复刻）。请注意他人模板设计的版权。
+          </p>
+        </div>
+        {isLoading ? (
+          <button onClick={() => stop()} className="rounded-[9px] border border-line px-3 py-1.5 text-xs hover:border-brand-line">
+            停止
+          </button>
+        ) : (
+          <button
+            onClick={generate}
+            disabled={!image}
+            className="rounded-[9px] bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-deep disabled:opacity-50"
+          >
+            生成
+          </button>
+        )}
+      </div>
+      {isLoading && (
+        <p className="mt-2 flex items-center gap-1.5 text-[0.68rem] text-brand-deep">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand" />
+          正在识别版式…右侧预览实时更新，生成后可继续手动微调
+        </p>
+      )}
+      {error && (
+        <p className="mt-2 text-[0.68rem] text-clay">生成失败，请重试（需在 .env.local 配置 ANTHROPIC_API_KEY）。</p>
       )}
     </div>
   );
