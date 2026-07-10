@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local sqlite (模板分享等服务端数据)
+*.db
+*.db-wal
+*.db-shm

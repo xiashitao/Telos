@@ -35,7 +35,8 @@ const defaultSectionOrder: SectionKey[] = [
 ];
 
 /** 默认示例数据 */
-const defaultResume: Resume = {
+/** 默认示例数据（也用作分享模板的预览数据） */
+export const defaultResume: Resume = {
   basics: {
     name: "陈墨白",
     headline: "高级前端工程师 · 7 年经验 · 架构 & 性能优化方向",

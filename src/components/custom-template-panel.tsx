@@ -78,6 +78,7 @@ export function CustomTemplatePanel({ onClose }: { onClose: () => void }) {
               onChange={(e) => rename(active.id, e.target.value)}
               className="w-40 rounded-md border border-line px-2.5 py-1 text-xs focus:border-brand focus:outline-none"
             />
+            <ShareButton name={active.name} spec={active.spec} />
             <button
               onClick={() => {
                 if (!confirm(`删除模板「${active.name}」？`)) return;
@@ -195,6 +196,42 @@ export function CustomTemplatePanel({ onClose }: { onClose: () => void }) {
         </div>
       )}
     </div>
+  );
+}
+
+/** 分享当前模板：POST 到服务端拿分享链接并复制到剪贴板 */
+function ShareButton({ name, spec }: { name: string; spec: TemplateSpec }) {
+  const [state, setState] = useState<"idle" | "busy" | "copied">("idle");
+  const [err, setErr] = useState<string | null>(null);
+
+  async function share() {
+    if (state === "busy") return;
+    setState("busy");
+    setErr(null);
+    try {
+      const res = await fetch("/api/share-template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, spec }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "分享失败");
+      await navigator.clipboard.writeText(data.url).catch(() => prompt("复制分享链接：", data.url));
+      setState("copied");
+      setTimeout(() => setState("idle"), 2500);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "分享失败");
+      setState("idle");
+    }
+  }
+
+  return (
+    <span className="flex items-center gap-1.5">
+      <button onClick={share} className="text-xs text-brand hover:text-brand-deep" disabled={state === "busy"}>
+        {state === "busy" ? "生成链接…" : state === "copied" ? "✓ 链接已复制" : "分享"}
+      </button>
+      {err && <span className="text-[0.66rem] text-clay">{err}</span>}
+    </span>
   );
 }
 

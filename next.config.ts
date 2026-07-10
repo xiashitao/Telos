@@ -5,8 +5,8 @@ const nextConfig: NextConfig = {
   turbopack: { root: __dirname },
   // 允许局域网 IP 访问时 HMR WebSocket 正常连接
   allowedDevOrigins: ["30.166.229.56"],
-  // pdf-parse / puppeteer 依赖原生/大体积模块,交给 Node 直接 require,不进打包
-  serverExternalPackages: ["pdf-parse", "puppeteer"],
+  // pdf-parse / puppeteer / better-sqlite3 依赖原生/大体积模块,交给 Node 直接 require,不进打包
+  serverExternalPackages: ["pdf-parse", "puppeteer", "better-sqlite3"],
 };
 
 export default nextConfig;
