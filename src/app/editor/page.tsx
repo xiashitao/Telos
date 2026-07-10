@@ -11,6 +11,7 @@ import { usePageOverflow } from "@/lib/use-page-overflow";
 import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { SmartOnePagePanel } from "@/components/smart-one-page-panel";
 import { ImportPanel } from "@/components/import-panel";
+import { JdTailorPanel } from "@/components/jd-tailor-bar";
 import { ExportMenu } from "@/components/export-menu";
 import { EnhanceButton } from "@/components/enhance-button";
 import { SortableList, SortableItem } from "@/components/sortable";
@@ -52,6 +53,7 @@ function EditorPageInner() {
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [onePageOpen, setOnePageOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [tailorOpen, setTailorOpen] = useState(false);
   const [tplPickerOpen, setTplPickerOpen] = useState(false);
   const tplPickerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
@@ -81,8 +83,9 @@ function EditorPageInner() {
     if (t) setTheme({ template: t.id, accent: t.accent });
   }, [searchParams, setTheme]);
 
-  function togglePanel(panel: "import" | "analysis" | "onePage") {
+  function togglePanel(panel: "import" | "tailor" | "analysis" | "onePage") {
     setImportOpen(panel === "import" ? (v) => !v : false);
+    setTailorOpen(panel === "tailor" ? (v) => !v : false);
     setAnalysisOpen(panel === "analysis" ? (v) => !v : false);
     setOnePageOpen(panel === "onePage" ? (v) => !v : false);
   }
@@ -94,7 +97,7 @@ function EditorPageInner() {
       active ? "border-brand bg-brand-soft text-brand-deep" : "border-line hover:border-brand-line hover:bg-brand-soft hover:text-brand-deep"
     }`;
 
-  const activePanel = importOpen ? "import" : analysisOpen ? "analysis" : onePageOpen ? "onePage" : null;
+  const activePanel = importOpen ? "import" : tailorOpen ? "tailor" : analysisOpen ? "analysis" : onePageOpen ? "onePage" : null;
 
   return (
     <>
@@ -178,6 +181,9 @@ function EditorPageInner() {
             <button onClick={() => togglePanel("import")} className={toolbarBtnCls(importOpen)}>
               导入
             </button>
+            <button onClick={() => togglePanel("tailor")} className={toolbarBtnCls(tailorOpen)}>
+              按 JD 优化
+            </button>
             <button onClick={() => togglePanel("analysis")} className={toolbarBtnCls(analysisOpen)}>
               AI 分析
             </button>
@@ -198,6 +204,7 @@ function EditorPageInner() {
             {activePanel && (
               <div className="panel-in mb-5">
                 {importOpen && <ImportPanel onClose={() => setImportOpen(false)} />}
+                {tailorOpen && <JdTailorPanel onClose={() => setTailorOpen(false)} />}
                 {analysisOpen && <AiAnalysisPanel resume={resume} onClose={() => setAnalysisOpen(false)} />}
                 {onePageOpen && <SmartOnePagePanel overflowing={overflowing} pageCount={pageCount} onClose={() => setOnePageOpen(false)} />}
               </div>

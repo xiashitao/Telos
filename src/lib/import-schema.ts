@@ -81,6 +81,7 @@ export function buildResumeFromPartial(p: PartialImport | undefined): Resume {
       location: str(b.location),
       availability: str(b.availability),
       summary: str(b.summary),
+      photo: "", // 导入的文本简历不含照片；photo 由用户后续上传
     },
     experiences: (p?.experiences ?? []).map((e, i) => ({
       id: `imp-exp-${i}`,
