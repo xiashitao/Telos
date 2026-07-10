@@ -2,6 +2,8 @@ import type { Resume } from "@/lib/schema";
 import type { ResumeTheme, SectionKey } from "@/lib/store";
 import { sectionMeta, hasSectionContent, filled } from "@/lib/store";
 import { templates } from "@/lib/templates";
+import type { TemplateSpec } from "@/lib/template-spec";
+import { SpecRenderer } from "@/components/spec-renderer";
 
 const defaultTheme: ResumeTheme = {
   template: "classic",
@@ -33,11 +35,18 @@ export function ResumePreview({
   resume: r,
   theme = defaultTheme,
   sectionOrder = defaultSectionOrder,
+  customSpec,
 }: {
   resume: Resume;
   theme?: ResumeTheme;
   sectionOrder?: SectionKey[];
+  /** 自定义模板(TemplateSpec)：传入则走 SpecRenderer，忽略 theme.template */
+  customSpec?: TemplateSpec;
 }) {
+  if (customSpec) {
+    return <SpecRenderer resume={r} spec={customSpec} sectionOrder={sectionOrder} />;
+  }
+
   const sp = spaceMap[theme.spacing] ?? spaceMap.normal;
   const fontCss = fontMap[theme.font] ?? fontMap.sans;
 
@@ -490,7 +499,7 @@ function Sections({
   );
 }
 
-function SectionContent({
+export function SectionContent({
   sectionKey,
   resume: r,
   accent,

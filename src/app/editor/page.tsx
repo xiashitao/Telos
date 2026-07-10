@@ -12,6 +12,9 @@ import { AiAnalysisPanel } from "@/components/ai-analysis-panel";
 import { SmartOnePagePanel } from "@/components/smart-one-page-panel";
 import { ImportPanel } from "@/components/import-panel";
 import { JdTailorPanel } from "@/components/jd-tailor-bar";
+import { CustomTemplatePanel } from "@/components/custom-template-panel";
+import { useCustomTemplates } from "@/lib/custom-templates-store";
+import { CUSTOM_PREFIX } from "@/lib/template-spec";
 import { ExportMenu } from "@/components/export-menu";
 import { EnhanceButton } from "@/components/enhance-button";
 import { SortableList, SortableItem } from "@/components/sortable";
@@ -54,6 +57,7 @@ function EditorPageInner() {
   const [onePageOpen, setOnePageOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [tailorOpen, setTailorOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
   const [tplPickerOpen, setTplPickerOpen] = useState(false);
   const tplPickerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
@@ -75,6 +79,7 @@ function EditorPageInner() {
 
   const s = useResumeStore();
   const { resume, sectionOrder, theme, setTheme } = s;
+  const customItems = useCustomTemplates((st) => st.items);
 
   useEffect(() => {
     const tid = searchParams.get("template");
@@ -83,11 +88,12 @@ function EditorPageInner() {
     if (t) setTheme({ template: t.id, accent: t.accent });
   }, [searchParams, setTheme]);
 
-  function togglePanel(panel: "import" | "tailor" | "analysis" | "onePage") {
+  function togglePanel(panel: "import" | "tailor" | "analysis" | "onePage" | "custom") {
     setImportOpen(panel === "import" ? (v) => !v : false);
     setTailorOpen(panel === "tailor" ? (v) => !v : false);
     setAnalysisOpen(panel === "analysis" ? (v) => !v : false);
     setOnePageOpen(panel === "onePage" ? (v) => !v : false);
+    setCustomOpen(panel === "custom" ? (v) => !v : false);
   }
 
   if (!mounted) return <div className="min-h-screen bg-bg" />;
@@ -97,7 +103,11 @@ function EditorPageInner() {
       active ? "border-brand bg-brand-soft text-brand-deep" : "border-line hover:border-brand-line hover:bg-brand-soft hover:text-brand-deep"
     }`;
 
-  const activePanel = importOpen ? "import" : tailorOpen ? "tailor" : analysisOpen ? "analysis" : onePageOpen ? "onePage" : null;
+  const activePanel = importOpen ? "import" : tailorOpen ? "tailor" : analysisOpen ? "analysis" : onePageOpen ? "onePage" : customOpen ? "custom" : null;
+
+  const customSpec = theme.template.startsWith(CUSTOM_PREFIX)
+    ? customItems.find((t) => t.id === theme.template.slice(CUSTOM_PREFIX.length))?.spec
+    : undefined;
 
   return (
     <>
@@ -119,11 +129,39 @@ function EditorPageInner() {
                     : "border-line bg-white text-ink-2 hover:border-brand-line hover:text-brand-deep"
                 }`}
               >
-                {templates.find((t) => t.id === theme.template)?.name ?? "模板"}
+                {customSpec
+                  ? customItems.find((t) => `${CUSTOM_PREFIX}${t.id}` === theme.template)?.name ?? "自定义"
+                  : templates.find((t) => t.id === theme.template)?.name ?? "模板"}
                 <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" strokeWidth="1.5" className={`ml-0.5 transition-transform ${tplPickerOpen ? "rotate-180" : ""}`}><path d="M1.5 2.5L4 5.5L6.5 2.5" /></svg>
               </button>
               {tplPickerOpen && (
                 <div className="dropdown-in absolute left-0 top-full z-50 mt-1.5 max-h-[70vh] w-[420px] overflow-y-auto rounded-xl border border-line bg-white p-3 shadow-pop">
+                  {/* 自定义模板区 */}
+                  <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[0.65rem] font-medium text-muted">我的模板</span>
+                    {customItems.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => { setTheme({ template: `${CUSTOM_PREFIX}${t.id}` }); setTplPickerOpen(false); }}
+                        className={`rounded-md px-2 py-0.5 text-[0.68rem] transition ${
+                          theme.template === `${CUSTOM_PREFIX}${t.id}`
+                            ? "bg-brand text-white"
+                            : "border border-line text-ink-2 hover:bg-bg-2"
+                        }`}
+                      >
+                        {t.name}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { setTplPickerOpen(false); togglePanel("custom"); }}
+                      className="rounded-md border border-dashed border-line px-2 py-0.5 text-[0.68rem] text-brand hover:border-brand-line"
+                    >
+                      + 自定义
+                    </button>
+                  </div>
+                  <div className="mb-1.5 border-t border-line" />
                   <div className="grid grid-cols-4 gap-2.5">
                     {templates.map((t) => (
                       <button
@@ -191,7 +229,7 @@ function EditorPageInner() {
               智能一页
               {overflowing && <span className="h-1.5 w-1.5 rounded-full bg-clay" />}
             </button>
-            <ExportMenu resume={resume} theme={theme} sectionOrder={sectionOrder} />
+            <ExportMenu resume={resume} theme={theme} sectionOrder={sectionOrder} customSpec={customSpec} />
           </div>
         </div>
       </div>
@@ -205,6 +243,7 @@ function EditorPageInner() {
               <div className="panel-in mb-5">
                 {importOpen && <ImportPanel onClose={() => setImportOpen(false)} />}
                 {tailorOpen && <JdTailorPanel onClose={() => setTailorOpen(false)} />}
+                {customOpen && <CustomTemplatePanel onClose={() => setCustomOpen(false)} />}
                 {analysisOpen && <AiAnalysisPanel resume={resume} onClose={() => setAnalysisOpen(false)} />}
                 {onePageOpen && <SmartOnePagePanel overflowing={overflowing} pageCount={pageCount} onClose={() => setOnePageOpen(false)} />}
               </div>
@@ -237,7 +276,7 @@ function EditorPageInner() {
           <div>
             <div className="rounded-card border border-line bg-gradient-to-b from-bg-2/80 to-bg-2 p-5 md:p-8" style={{ minHeight: "calc(100vh - 7rem)" }}>
               <div className="mx-auto w-full" style={{ maxWidth: "794px" }}>
-                <ResumePreview resume={resume} theme={theme} sectionOrder={sectionOrder} />
+                <ResumePreview resume={resume} theme={theme} sectionOrder={sectionOrder} customSpec={customSpec} />
               </div>
             </div>
           </div>

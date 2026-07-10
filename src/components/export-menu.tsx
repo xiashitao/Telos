@@ -4,15 +4,18 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { exportResumeServer } from "@/lib/export-pdf-server";
 import type { Resume } from "@/lib/schema";
 import type { ResumeTheme, SectionKey } from "@/lib/store";
+import type { TemplateSpec } from "@/lib/template-spec";
 
 export function ExportMenu({
   resume,
   theme,
   sectionOrder,
+  customSpec,
 }: {
   resume: Resume;
   theme: ResumeTheme;
   sectionOrder: SectionKey[];
+  customSpec?: TemplateSpec;
 }) {
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState<null | "pdf" | "html">(null);
@@ -41,7 +44,7 @@ export function ExportMenu({
     if (exporting) return;
     setExporting(format);
     try {
-      await exportResumeServer(resume, theme, sectionOrder, format);
+      await exportResumeServer(resume, theme, sectionOrder, format, customSpec);
     } catch (e) {
       alert(e instanceof Error ? e.message : "导出失败,请重试");
       console.error(e);

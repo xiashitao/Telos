@@ -2,6 +2,7 @@
 
 import type { Resume } from "@/lib/schema";
 import type { ResumeTheme, SectionKey } from "@/lib/store";
+import type { TemplateSpec } from "@/lib/template-spec";
 
 /**
  * 触发服务端导出：把简历数据 POST 给 /api/export，服务端用 headless 浏览器渲染
@@ -14,11 +15,12 @@ export async function exportResumeServer(
   theme: ResumeTheme,
   sectionOrder: SectionKey[],
   format: "pdf" | "html" = "pdf",
+  customSpec?: TemplateSpec,
 ): Promise<void> {
   const res = await fetch("/api/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ resume, theme, sectionOrder, format }),
+    body: JSON.stringify({ resume, theme, sectionOrder, format, customSpec }),
   });
   if (!res.ok) {
     let msg = "导出失败,请重试";

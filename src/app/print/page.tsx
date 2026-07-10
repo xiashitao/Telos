@@ -5,11 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { ResumePreview } from "@/components/resume-preview";
 import type { Resume } from "@/lib/schema";
 import type { ResumeTheme, SectionKey } from "@/lib/store";
+import { parseSpec } from "@/lib/template-spec";
 
 interface ExportPayload {
   resume: Resume;
   theme: ResumeTheme;
   sectionOrder: SectionKey[];
+  customSpec?: unknown;
 }
 
 /**
@@ -60,6 +62,7 @@ function PrintInner() {
           resume={payload.resume}
           theme={payload.theme}
           sectionOrder={payload.sectionOrder}
+          customSpec={parseSpec(payload.customSpec) ?? undefined}
         />
       </div>
     </>
