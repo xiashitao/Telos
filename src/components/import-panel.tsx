@@ -5,6 +5,7 @@ import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { useResumeStore } from "@/lib/store";
 import { importResumeSchema, buildResumeFromPartial } from "@/lib/import-schema";
 import { extractFileText } from "@/lib/extract-file-text";
+import { CloudNote } from "@/components/local-mode";
 
 /**
  * Markdown/文本简历导入面板。
@@ -69,6 +70,7 @@ export function ImportPanel({ onClose }: { onClose: () => void }) {
           ✕
         </button>
       </div>
+      <CloudNote kind="ai" />
 
       {/* 上传区：点击选文件或拖入 PDF/Markdown */}
       <input

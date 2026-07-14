@@ -5,6 +5,7 @@ import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { useResumeStore } from "@/lib/store";
 import type { Resume } from "@/lib/schema";
 import { importResumeSchema, buildResumeFromPartial } from "@/lib/import-schema";
+import { CloudNote } from "@/components/local-mode";
 
 /**
  * 「按 JD 优化」面板（由工具栏按钮开关，渲染在预览列上方）。
@@ -55,6 +56,7 @@ export function JdTailorPanel({ onClose }: { onClose: () => void }) {
           ✕
         </button>
       </div>
+      <CloudNote kind="ai" />
 
       <textarea
         value={jd}

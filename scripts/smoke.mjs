@@ -20,6 +20,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // dev/prod 通用：用 domcontentloaded，别用 networkidle
 const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
 const page = await browser.newPage();
+await page.setViewport({ width: 1440, height: 900 });
 page.on("dialog", (d) => d.accept());
 const kill = setTimeout(() => { console.error("!! 冒烟超时(120s)"); process.exit(1); }, 120_000);
 
@@ -62,6 +63,20 @@ try {
   }
   const noImg = !buf.includes(Buffer.from("/Subtype/Image")) && !buf.includes(Buffer.from("/Subtype /Image"));
   ok(`导出是文字版 PDF (${tj} 文字算子, 无内嵌图)`, tj > 20 && noImg);
+
+  // 4) 本地模式开关：点开后出现「数据仅存本地」徽标
+  await page.goto(BASE + "/editor", { waitUntil: "domcontentloaded", timeout: 45_000 });
+  await page.waitForSelector("#resume-sheet", { timeout: 30_000 });
+  const toggled = await page.evaluate(() => {
+    const btn = [...document.querySelectorAll('button[role="switch"]')][0];
+    if (!btn) return false;
+    btn.click();
+    return true;
+  });
+  await sleep(400);
+  const badge = await page.evaluate(() =>
+    [...document.querySelectorAll("span")].some((e) => (e.textContent ?? "").trim() === "数据仅存本地"));
+  ok("本地模式开关生效(出现徽标)", toggled && badge);
 } catch (e) {
   ok(`未预期错误: ${String(e).slice(0, 120)}`, false);
 } finally {

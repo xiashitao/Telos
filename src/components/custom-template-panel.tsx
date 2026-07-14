@@ -6,6 +6,7 @@ import { useResumeStore, themePresets } from "@/lib/store";
 import { useCustomTemplates } from "@/lib/custom-templates-store";
 import { CUSTOM_PREFIX, templateSpecSchema, mergeSpecPartial } from "@/lib/template-spec";
 import type { TemplateSpec } from "@/lib/template-spec";
+import { useLocalMode } from "@/components/local-mode";
 
 /**
  * 自定义模板面板 —— 新建/选择/命名/删除自定义模板，逐参调整 TemplateSpec。
@@ -201,9 +202,19 @@ export function CustomTemplatePanel({ onClose }: { onClose: () => void }) {
 
 /** 分享当前模板：POST 到服务端拿分享链接并复制到剪贴板；未登录时引导去登录 */
 function ShareButton({ name, spec }: { name: string; spec: TemplateSpec }) {
+  const localMode = useLocalMode();
   const [state, setState] = useState<"idle" | "busy" | "copied">("idle");
   const [err, setErr] = useState<string | null>(null);
   const [needLogin, setNeedLogin] = useState(false);
+
+  // 本地模式：分享是唯一的云写入，关闭它并说明
+  if (localMode) {
+    return (
+      <span className="text-[0.66rem] text-muted" title="分享会把模板上传到服务器，本地模式下已关闭">
+        本地模式已关闭分享
+      </span>
+    );
+  }
 
   async function share() {
     if (state === "busy") return;

@@ -5,6 +5,7 @@ import { exportResumeServer } from "@/lib/export-pdf-server";
 import type { Resume } from "@/lib/schema";
 import type { ResumeTheme, SectionKey } from "@/lib/store";
 import type { TemplateSpec } from "@/lib/template-spec";
+import { CloudNote } from "@/components/local-mode";
 
 export function ExportMenu({
   resume,
@@ -71,9 +72,10 @@ export function ExportMenu({
         )}
       </button>
       {open && (
-        <div className="dropdown-in absolute right-0 top-full z-50 mt-1.5 min-w-[150px] rounded-lg border border-line bg-white p-1.5 shadow-pop">
+        <div className="dropdown-in absolute right-0 top-full z-50 mt-1.5 min-w-[190px] rounded-lg border border-line bg-white p-1.5 shadow-pop">
           <MenuItem onClick={() => run("pdf")} title="PDF" desc="文字版 · ATS 友好" />
           <MenuItem onClick={() => run("html")} title="HTML" desc="自包含网页" />
+          <div className="px-1"><CloudNote kind="export" /></div>
         </div>
       )}
     </div>

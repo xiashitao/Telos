@@ -13,6 +13,7 @@ import { SmartOnePagePanel } from "@/components/smart-one-page-panel";
 import { ImportPanel } from "@/components/import-panel";
 import { JdTailorPanel } from "@/components/jd-tailor-bar";
 import { CustomTemplatePanel } from "@/components/custom-template-panel";
+import { LocalModeControls } from "@/components/local-mode";
 import { useCustomTemplates } from "@/lib/custom-templates-store";
 import { CUSTOM_PREFIX } from "@/lib/template-spec";
 import { ExportMenu } from "@/components/export-menu";
@@ -218,6 +219,7 @@ function EditorPageInner() {
             <span className="hidden items-center gap-1.5 text-xs text-muted md:flex fade-in">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" /> 已自动保存
             </span>
+            <LocalModeControls />
             <button onClick={() => togglePanel("import")} className={toolbarBtnCls(importOpen)}>
               导入
             </button>
