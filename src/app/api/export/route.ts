@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import puppeteer, { type Browser } from "puppeteer";
 import { putExport, getExport, dropExport } from "@/lib/export-store";
+import { rateLimit, RL } from "@/lib/rate-limit";
+import { captureError } from "@/lib/observability";
 
 // headless 浏览器需 Node 运行时；导出可能耗时，放宽上限。
 export const runtime = "nodejs";
@@ -16,6 +18,9 @@ export async function GET(req: NextRequest) {
 
 /** 生成 A4 文字版 PDF：暂存数据 → 无头浏览器打开 /print 渲染真实预览 → page.pdf。 */
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, RL.heavy);
+  if (limited) return limited;
+
   const body = await req.json().catch(() => null);
   if (!body?.resume) {
     return Response.json({ error: "缺少简历数据" }, { status: 400 });
@@ -88,7 +93,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (e) {
-    console.error("[export] 生成 PDF 失败", e);
+    captureError(e, { scope: "api/export", format });
     return Response.json({ error: "生成 PDF 失败,请重试" }, { status: 500 });
   } finally {
     if (browser) await browser.close();

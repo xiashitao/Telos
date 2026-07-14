@@ -1,11 +1,16 @@
 import type { NextRequest } from "next/server";
 import { PDFParse } from "pdf-parse";
+import { rateLimit, RL } from "@/lib/rate-limit";
+import { captureError } from "@/lib/observability";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 /** 从上传的 PDF 抽取纯文本，供前端喂给流式导入。 */
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, RL.heavy);
+  if (limited) return limited;
+
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) {
@@ -28,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
     return Response.json({ text });
   } catch (e) {
-    console.error("[extract-pdf] 解析失败", e);
+    captureError(e, { scope: "api/extract-pdf" });
     return Response.json({ error: "PDF 解析失败,请换一个文件重试" }, { status: 500 });
   }
 }

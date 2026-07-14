@@ -62,6 +62,8 @@ function EditorPageInner() {
   const tplPickerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const { overflowing, pageCount } = usePageOverflow();
+  // SSR 水合守卫：仅挂载后渲染依赖 localStorage 的内容，避免 hydration mismatch
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {

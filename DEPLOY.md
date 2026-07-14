@@ -177,7 +177,8 @@ sudo systemctl reload caddy
 ## 6. 安全与运维要点
 
 - **密钥**：`<JWT_SECRET>` 泄漏 = 任何人可伪造全站登录态。只放服务器 .env（600 权限），换密钥 = 全员重新登录。
-- **限流（上线后尽快补）**：`/api/enhance|analyze|import|tailor|vibe-template` 烧 AI 账单、`/api/export` 每次起 Chromium。最简单在 Caddy 层按 IP 限速，或应用层加计数。目前**没有任何限流**。
+- **限流（已内置）**：AI/导出接口按 IP 内存限流（`src/lib/rate-limit.ts`，AI 12/min、导出 8/min），超限 429。**多实例部署需换 Redis**（当前是单进程内存计数）。可再叠一层 Caddy 层限速做纵深防御。
+- **错误上报**：服务端错误走 `captureError` 打结构化 JSON 到 `journalctl -u telos`；配 `ERROR_WEBHOOK_URL` 可转发到 Sentry/Slack。客户端崩溃由 `global-error.tsx` → `/api/client-error` 上报。
 - **备份**：`/opt/telos-data/telos.db`、网关用户库、Kairos `charts.db`——三个 SQLite 文件定时 `sqlite3 xx.db ".backup …"` 即可。
 - **进程模型**：Telos 导出用的内存暂存（export-store）是单进程语义，`next start` 单实例没问题；未来多实例需换 Redis。
 - **常见坑速查**：

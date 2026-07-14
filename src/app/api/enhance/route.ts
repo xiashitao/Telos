@@ -1,7 +1,11 @@
 import { streamText } from "ai";
 import { getModel, hasApiKey, SYSTEM_ENHANCE } from "@/lib/ai";
+import { rateLimit, RL } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  const limited = rateLimit(req, RL.ai);
+  if (limited) return limited;
+
   if (!hasApiKey()) {
     return Response.json(
       { error: "未配置 ANTHROPIC_API_KEY,请在 .env.local 设置后重启服务。" },

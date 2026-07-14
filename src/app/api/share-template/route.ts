@@ -3,6 +3,7 @@ import { createShare, getShare } from "@/lib/share-db";
 import { parseSpec } from "@/lib/template-spec";
 import { getSession } from "@/lib/auth";
 import { AUTH_ENABLED } from "@/lib/auth-config";
+import { rateLimit, RL } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,9 @@ export const runtime = "nodejs";
  * GET  ?slug=xxx    → {name, spec}  取分享（使用方 fork 用，无需登录）
  */
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, RL.normal);
+  if (limited) return limited;
+
   let owner = "anonymous";
   if (AUTH_ENABLED) {
     const session = await getSession();

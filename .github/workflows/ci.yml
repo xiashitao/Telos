@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      # Puppeteer 需要 Chromium 的系统库
+      - name: Install Chromium deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+            libgbm1 libasound2t64 fonts-noto-cjk || \
+          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+            libgbm1 libasound2 fonts-noto-cjk
+
+      - name: Start app & smoke test
+        run: |
+          npx next start -H 127.0.0.1 -p 3000 &
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:3000/ >/dev/null 2>&1 && break
+            sleep 1
+          done
+          node scripts/smoke.mjs
+        env:
+          SMOKE_BASE: http://127.0.0.1:3000

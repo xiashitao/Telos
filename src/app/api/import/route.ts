@@ -1,6 +1,7 @@
 import { streamObject } from "ai";
 import { getModel, hasApiKey } from "@/lib/ai";
 import { importResumeSchema } from "@/lib/import-schema";
+import { rateLimit, RL } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -20,6 +21,9 @@ const SYSTEM_IMPORT = `你是简历结构化助手。用户会粘贴一份简历
 
 /** 把粘贴的 Markdown/文本流式结构化成简历对象（供前端边收边填表单）。 */
 export async function POST(req: Request) {
+  const limited = rateLimit(req, RL.ai);
+  if (limited) return limited;
+
   if (!hasApiKey()) {
     return Response.json(
       { error: "未配置 ANTHROPIC_API_KEY,请在 .env.local 设置后重启服务。" },

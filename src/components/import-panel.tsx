@@ -18,7 +18,7 @@ export function ImportPanel({ onClose }: { onClose: () => void }) {
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const started = useRef(false);
+  const [started, setStarted] = useState(false);
 
   async function handleFile(file: File | undefined | null) {
     if (!file) return;
@@ -50,11 +50,11 @@ export function ImportPanel({ onClose }: { onClose: () => void }) {
   function handleImport() {
     if (!canImport) return;
     if (!confirm("导入将覆盖当前简历的全部内容，确定继续？")) return;
-    started.current = true;
+    setStarted(true);
     submit({ text });
   }
 
-  const done = started.current && !isLoading && !error && object;
+  const done = started && !isLoading && !error && object;
 
   return (
     <div className="mb-4 rounded-card border border-line bg-white p-5 shadow-card">
